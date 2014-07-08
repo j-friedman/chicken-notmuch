@@ -1,0 +1,9 @@
+(compile -O2 -d1 -s "notmuch.scm" -lnotmuch -j "notmuch")
+(compile -O2 -d0 -s "notmuch.import.scm")
+
+(install-extension
+ 'notmuch
+ '("notmuch.so" "notmuch.import.so")
+ '((version "3.1.0")
+))
+
