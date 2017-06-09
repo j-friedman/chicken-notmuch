@@ -3,7 +3,7 @@
 
 (module
  notmuch *
- 
+
  (import scheme chicken foreign)
 
  (define NOTMUCH-TAG-MAX (foreign-value "NOTMUCH_TAG_MAX" int))
@@ -26,7 +26,7 @@
  (define notmuch-status/unbalanced-freeze-thaw (foreign-value "NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW" int))
  (define notmuch-status/unbalanced-atomic (foreign-value "NOTMUCH_STATUS_UNBALANCED_ATOMIC" int))
  (define notmuch-status/unsupported-operation (foreign-value "NOTMUCH_STATUS_UNSUPPORTED_OPERATION" int))
- 
+
  (define-foreign-type notmuch-database-mode int)
  (define notmuch-database-mode/read-only (foreign-value "NOTMUCH_DATABASE_MODE_READ_ONLY" int))
  (define notmuch-database-mode/read-write (foreign-value "NOTMUCH_DATABASE_MODE_READ_WRITE" int))
@@ -116,13 +116,13 @@
 
  (define notmuch-query-get-query-string
    (foreign-lambda c-string "notmuch_query_get_query_string" notmuch-query))
-   
+
  (define notmuch-query-set-omit-excluded
    (foreign-lambda void "notmuch_query_set_omit_excluded" notmuch-query notmuch-exclude))
- 
+
  (define notmuch-query-set-sort
    (foreign-lambda void "notmuch_query_set_sort" notmuch-query notmuch-sort))
- 
+
  (define notmuch-query-get-sort
    (foreign-lambda notmuch-sort "notmuch_query_get_sort" notmuch-query))
 
@@ -130,10 +130,10 @@
    (foreign-lambda void "notmuch_query_add_tag_exclude" notmuch-query c-string))
 
  (define notmuch-query-search-threads
-   (foreign-lambda notmuch-threads  "notmuch_query_search_threads" notmuch-query))
+   (foreign-lambda notmuch-threads  "notmuch_query_search_threads" notmuch-query (c-pointer notmuch-threads)))
 
  (define notmuch-query-search-messages
-   (foreign-lambda notmuch-messages "notmuch_query_search_messages" notmuch-query))
+   (foreign-lambda notmuch-messages "notmuch_query_search_messages" notmuch-query (c-pointer notmuch-messages)))
 
  (define notmuch-query-destroy
    (foreign-lambda void "notmuch_query_destroy" notmuch-query))
@@ -151,10 +151,10 @@
    (foreign-lambda void "notmuch_threads_destroy" notmuch-threads))
 
  (define notmuch-query-count-messages
-   (foreign-lambda unsigned-int "notmuch_query_count_messages" notmuch-query))
+   (foreign-lambda unsigned-int "notmuch_query_count_messages" notmuch-query (c-pointer unsigned-int)))
 
  (define notmuch-query-count-threads
-   (foreign-lambda unsigned-int "notmuch_query_count_threads" notmuch-query))
+   (foreign-lambda unsigned-int "notmuch_query_count_threads" notmuch-query (c-pointer unsigned-int)))
 
  (define notmuch-thread-get-thread-id
    (foreign-lambda c-string "notmuch_thread_get_thread_id" notmuch-thread))
@@ -225,7 +225,7 @@
  (define notmuch-message-set-flag
    (foreign-lambda void "notmuch_message_set_flag" notmuch-message notmuch-message-flag bool))
 
- (define notmuch-message-get-date 
+ (define notmuch-message-get-date
    (foreign-lambda time_t "notmuch_message_get_date " notmuch-message))
 
  (define notmuch-message-get-header
