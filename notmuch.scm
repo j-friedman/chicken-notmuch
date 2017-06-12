@@ -342,5 +342,40 @@
                (loop (notmuch-threads-get msgs))))
        (notmuch-query-destroy q)))
 
-;; EOF
-)
+ ;; (import (prefix notmuch nm:))
+ ;; (call-with-notmuch-db
+ ;;  "/home/jonf/mail"
+ ;;  notmuch-database-mode/read-only
+ ;;  (lambda (db)
+ ;;    (map-notmuch-messages
+ ;;     db "tag:foobar"
+ ;;     (lambda (msg)
+ ;;       (display (notmuch-message-get-filename msg))))))
+
+ (define db (open-notmuch-db "/home/jonf/mail" notmuch-database-mode/read-only))
+ (define q (notmuch-query-create db "tag:foobar"))
+
+ (define (notmuch-status->string status)
+   (cond
+    ((= status notmuch-status/success) "Success")
+    ((= status notmuch-status/read-only-database) "Read-only database")
+    ((= status notmuch-status/xapian-exception) "Xapian Exception")
+    ((= status notmuch-status/file-error) "File error")
+    ((= status notmuch-status/file-not-email) "File not email")
+    ((= status notmuch-status/duplicate-message-id) "Duplicate message ID")
+    ((= status notmuch-status/null-pointer) "Null pointer")
+    ((= status notmuch-status/tag-too-long) "Tag too long")
+    ((= status notmuch-status/unbalanced-freeze-thaw) "Unbalanced freeze-thaw")
+    ((= status notmuch-status/unbalanced-atomic) "Unbalanced atomic")
+    ((= status notmuch-status/unsupported-operation) "Unsupported operation")
+    (else "Unknown")))
+
+ (define (foo q)
+   (let-location
+    ([count unsigned-int])
+    (let ((status (notmuch-query-count-messages q (location count))))
+      (display (format "\nresult: ~A\n" (notmuch-status->string status)))
+      count)))
+
+ ;; EOF
+ )
