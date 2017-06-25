@@ -130,10 +130,10 @@
    (foreign-lambda void "notmuch_query_add_tag_exclude" notmuch-query c-string))
 
  (define notmuch-query-search-threads
-   (foreign-lambda notmuch-threads  "notmuch_query_search_threads" notmuch-query (c-pointer notmuch-threads)))
+   (foreign-lambda unsigned-int "notmuch_query_search_threads" notmuch-query (c-pointer notmuch-threads)))
 
  (define notmuch-query-search-messages
-   (foreign-lambda notmuch-messages "notmuch_query_search_messages" notmuch-query (c-pointer notmuch-messages)))
+   (foreign-lambda unsigned-int "notmuch_query_search_messages" notmuch-query (c-pointer notmuch-messages)))
 
  (define notmuch-query-destroy
    (foreign-lambda void "notmuch_query_destroy" notmuch-query))
@@ -150,8 +150,14 @@
  (define notmuch-threads-destroy
    (foreign-lambda void "notmuch_threads_destroy" notmuch-threads))
 
- (define notmuch-query-count-messages
+ (define %notmuch-query-count-messages
    (foreign-lambda unsigned-int "notmuch_query_count_messages" notmuch-query (c-pointer unsigned-int)))
+
+ (define (notmuch-query-count-messages query)
+   (let-location
+       ([count unsigned-int])
+     (let ((status (%notmuch-query-count-messages query #$count)))
+       count)))
 
  (define notmuch-query-count-threads
    (foreign-lambda unsigned-int "notmuch_query_count_threads" notmuch-query (c-pointer unsigned-int)))
@@ -291,7 +297,7 @@
  (define (open-notmuch-db db-path mode)
   (let* ([db ((foreign-primitive notmuch-database
                                  ([c-string path]
-                                 [int mode])
+                                  [int mode])
                                  "notmuch_database_t *db;"
                                  "int err = notmuch_database_open(path, mode, &db);"
                                  "if ( err != NOTMUCH_STATUS_SUCCESS ) {"
@@ -318,42 +324,42 @@
      (notmuch-query-destroy query)
      v))
 
- (define (map-notmuch-messages db query thunk)
-   (let* ([q (notmuch-query-create db query)]
-          [msgs (notmuch-query-search-messages q)])
-       (let loop
-           ([m (notmuch-messages-get msgs)])
-         (when (notmuch-messages-valid msgs)
+ (define (maybe-print-status-result status #!optional (message ""))
+   (unless (= notmuch-status/success status)
+     (display (format "\n Error~A: ~A\n"
+                      (if (equal? message "")
+                          (format " ~A" message)
+                          "")
+                      (notmuch-status->string status))))
+   status)
+
+ (define (map-notmuch-messages db q-str thunk)
+   (let ([q (notmuch-query-create db q-str)])
+     (let-location ([msgs notmuch-messages])
+       (maybe-print-status-result (notmuch-query-search-messages q #$msgs) "executing query")
+       (let loop ([m (notmuch-messages-get msgs)])
+         (if (notmuch-messages-valid msgs)
+             (begin
                (thunk m)
                (notmuch-message-destroy m)
                (notmuch-messages-move-to-next msgs)
-               (loop (notmuch-messages-get msgs))))
-       (notmuch-query-destroy q)))
+               (loop (notmuch-messages-get msgs)))
+             (notmuch-messages-destroy msgs))))
+     (notmuch-query-destroy q)))
 
- (define (map-notmuch-threads db query thunk)
-   (let* ([q (notmuch-query-create db query)]
-          [msgs (notmuch-query-search-threads q)])
-       (let loop
-           ([m (notmuch-threads-get msgs)])
-         (when (notmuch-threads-valid msgs)
-               (thunk m)
-               (notmuch-threads-destroy m)
-               (notmuch-threads-move-to-next msgs)
-               (loop (notmuch-threads-get msgs))))
-       (notmuch-query-destroy q)))
-
- ;; (import (prefix notmuch nm:))
- ;; (call-with-notmuch-db
- ;;  "/home/jonf/mail"
- ;;  notmuch-database-mode/read-only
- ;;  (lambda (db)
- ;;    (map-notmuch-messages
- ;;     db "tag:foobar"
- ;;     (lambda (msg)
- ;;       (display (notmuch-message-get-filename msg))))))
-
- (define db (open-notmuch-db "/home/jonf/mail" notmuch-database-mode/read-only))
- (define q (notmuch-query-create db "tag:foobar"))
+ (define (map-notmuch-threads db q-str thunk)
+   (let ([q (notmuch-query-create db q-str)])
+     (let-location ([threads notmuch-threads])
+       (maybe-print-status-result (notmuch-query-search-messages q #$threads) "executing query")
+       (let loop ([t (notmuch-threads-get threads)])
+         (if (notmuch-threads-valid threads)
+             (begin
+               (thunk t)
+               (notmuch-thread-destroy t)
+               (notmuch-threads-move-to-next threads)
+               (loop (notmuch-threads-get threads)))
+             (notmuch-threads-destroy threads))))
+     (notmuch-query-destroy q)))
 
  (define (notmuch-status->string status)
    (cond
@@ -370,12 +376,5 @@
     ((= status notmuch-status/unsupported-operation) "Unsupported operation")
     (else "Unknown")))
 
- (define (foo q)
-   (let-location
-    ([count unsigned-int])
-    (let ((status (notmuch-query-count-messages q (location count))))
-      (display (format "\nresult: ~A\n" (notmuch-status->string status)))
-      count)))
-
- ;; EOF
+;; EOF
  )
