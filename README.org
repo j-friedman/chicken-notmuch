@@ -1,0 +1,22 @@
+* chicken-notmuch
+
+CHICKEN Scheme bindings for libnotmuch.
+
+** Requirements
+
+You'll need to have libnotmuch5 install, which as the moment I'm writing this is
+only available in git. That means manually compiling and installing it, or
+grabbing =notmuch-git= off of AUR if you use Arch linux.
+
+You'll also need CHICKEN Scheme, obviously
+
+** Installation
+
+Just run =chicken-install= in this directory.
+
+** API reference
+
+I haven't written any documentation for this thing, sorry. Check out the source
+code for notmuch.h [[https://git.notmuchmail.org/git/notmuch/blob/HEAD:/lib/notmuch.h][here]] to read the very well written documentation that the
+actual notmuch folks have put together. This is a pretty thin wrapper around the
+real libnotmuch so it should be pretty simple to translate.
