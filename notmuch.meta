@@ -17,11 +17,9 @@
 ;;
 ;; Author: Jon Friedman <jonf@gojon.com>
 
-(foreign-declare "#include <time.h>")
-
 ((egg "notmuch.egg")
  (license "GPL-3")
  (category data)
  (author "Jon Friedman")
  (synopsis "Bindings to the notmuch mail library")
- (files "LICENSE" "notmuch.setup" "notmuch.meta" "notmuch.scm" "README.md"))
+ (files "LICENSE" "notmuch.setup" "notmuch.meta" "notmuch.scm" "README.org"))
